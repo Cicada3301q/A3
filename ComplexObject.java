@@ -17,10 +17,12 @@ public class ComplexObject {
         System.out.print("Enter an integer value for SubObject1: ");
         int intValue1 = scanner.nextInt();
         subObject1.setIntValue(intValue1);
+        subObject1.setCircularReference(this); // Set the circular reference.
 
         System.out.print("Enter a double value for SubObject2: ");
         double doubleValue2 = scanner.nextDouble();
         subObject2.setDoubleValue(doubleValue2);
+        subObject2.setCircularReference(this); // Set the circular reference.
 
         // Close the scanner
         scanner.close();
@@ -29,33 +31,72 @@ public class ComplexObject {
     public void displayInfo() {
         System.out.println("ComplexObject Information:");
         System.out.println("SubObject1 Information:");
-        // Display SubObject1 information
+        System.out.println("Int Value: " + subObject1.getIntValue());
+        ComplexObject reference1 = subObject1.getCircularReference();
+        if (reference1 != null) {
+            System.out.println("Circular Reference in SubObject1: " + reference1);
+        } else {
+            System.out.println("No Circular Reference in SubObject1");
+        }
+
         System.out.println("SubObject2 Information:");
-        // Display SubObject2 information
+        System.out.println("Double Value: " + subObject2.getDoubleValue());
+        ComplexObject reference2 = subObject2.getCircularReference();
+        if (reference2 != null) {
+            System.out.println("Circular Reference in SubObject2: " + reference2);
+        } else {
+            System.out.println("No Circular Reference in SubObject2");
+        }
     }
 
     public static void main(String[] args) {
         ComplexObject complexObject = new ComplexObject();
         complexObject.configure();
         complexObject.displayInfo();
+
     }
 }
+
 class SubObject1 {
     private int intValue;
+    private ComplexObject circularReference;
 
     public void setIntValue(int intValue) {
         this.intValue = intValue;
     }
-    
-    // Add other methods and instance variables as needed.
+
+    public int getIntValue() {
+        return this.intValue;
+    }
+
+    public void setCircularReference(ComplexObject circularReference) {
+        this.circularReference = circularReference;
+    }
+
+    public ComplexObject getCircularReference() {
+        return this.circularReference;
+    }
+
 }
 
 class SubObject2 {
     private double doubleValue;
+    private ComplexObject circularReference;
 
     public void setDoubleValue(double doubleValue) {
         this.doubleValue = doubleValue;
     }
 
-    // Add other methods and instance variables as needed.
+    public double getDoubleValue() {
+        return this.doubleValue;
+    }
+
+    public void setCircularReference(ComplexObject circularReference) {
+        this.circularReference = circularReference;
+    }
+
+    public ComplexObject getCircularReference() {
+        return this.circularReference;
+    }
+
 }
