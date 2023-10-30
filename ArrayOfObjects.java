@@ -1,7 +1,7 @@
 import java.util.Scanner;
 
 public class ArrayOfObjects {
-    private CustomObject[] objectArray;
+    public CustomObject[] objectArray;
 
     public ArrayOfObjects(int size) {
         objectArray = new CustomObject[size];
@@ -47,8 +47,8 @@ public class ArrayOfObjects {
 }
 
 class CustomObject {
-    private int intValue;
-    private String stringValue;
+    public int intValue;
+    public String stringValue;
 
     public void configure() {
         Scanner scanner = new Scanner(System.in);

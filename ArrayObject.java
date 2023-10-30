@@ -1,7 +1,7 @@
 import java.util.Scanner;
 
 public class ArrayObject {
-    private int[] intArray;
+    public int[] intArray;
 
     public ArrayObject(int size) {
         intArray = new int[size];
@@ -39,5 +39,7 @@ public class ArrayObject {
         for (int i = 0; i < values.length; i++) {
             System.out.println("Element " + i + ": " + values[i]);
         }
+        Serializer serializer = new Serializer();
+        serializer.serialize(arrayObject);
     }
 }

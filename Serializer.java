@@ -27,69 +27,87 @@ public class Serializer {
         return document;
     }
 
-private void serializeObject(Object obj, Element parent) {
-    if (obj == null) {
-        return;
-    }
-
-    Element objectElement = new Element("object");
-    objectElement.setAttribute("class", obj.getClass().getName());
-
-    // Check if the object has already been assigned an ID
-    Integer objectId = objectIds.get(obj);
-    if (objectId == null) {
-        // Assign a new unique ID
-        objectId = currentId;
-        objectIds.put(obj, objectId);
-        currentId++;
-    }
-
-    objectElement.setAttribute("id", String.valueOf(objectId));
-    parent.addContent(objectElement);
-
-    // Store a reference to this object for possible later use
-    references.put(obj, objectElement);
-
-    // Add logic to serialize object properties
-    // For example, if you want to serialize fields, you can use reflection.
-    Field[] fields = obj.getClass().getDeclaredFields();
-    for (Field field : fields) {
-        // field.setAccessible(true);
-        Element fieldElement = new Element("field");
-        fieldElement.setAttribute("name", field.getName());
-        fieldElement.setAttribute("declaringClass", field.getDeclaringClass().getName());
-
-        try {
-            // Serialize the field's value
-            Object value = field.get(obj);
-            if (value != null) {
-                if (!field.getType().isPrimitive()) {
-                    // If the field is an object reference, recursively serialize it
-                    Element valueElement = new Element("reference");
-                    Integer referenceId = objectIds.get(value); // Check if the object has an ID
-                    if (referenceId != null) {
-                        valueElement.setText(String.valueOf(referenceId));
-                        fieldElement.addContent(valueElement);
+    private void serializeObject(Object obj, Element parent) {
+        if (obj == null) {
+            return;
+        }
+    
+        Element objectElement = new Element("object");
+        objectElement.setAttribute("class", obj.getClass().getName());
+    
+        // Check if the object has already been assigned an ID
+        Integer objectId = objectIds.get(obj);
+        if (objectId == null) {
+            // Assign a new unique ID
+            objectId = currentId;
+            objectIds.put(obj, objectId);
+            currentId++;
+        }
+    
+        objectElement.setAttribute("id", String.valueOf(objectId));
+        parent.addContent(objectElement);
+    
+        // Store a reference to this object for possible later use
+        references.put(obj, objectElement);
+    
+        // Add logic to serialize object properties
+        // For example, if you want to serialize fields, you can use reflection.
+        Field[] fields = obj.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            //field.setAccessible(true);
+            Class<?> fieldType = field.getType();
+            Element fieldElement = new Element("field");
+            fieldElement.setAttribute("name", field.getName());
+            fieldElement.setAttribute("declaringClass", field.getDeclaringClass().getName());
+    
+            try {
+                // Serialize the field's value
+                Object value = field.get(obj);
+                if (value != null) {
+                    if(fieldType.isArray()){
+                        if (fieldType.getComponentType().isPrimitive()) {
+                            // Array of primitives
+                            Element arrayElement = new Element("object");
+                            arrayElement.setAttribute("class", fieldType.getName());
+                            arrayElement.setAttribute("length", String.valueOf(Array.getLength(value)));
+                            for (int i = 0; i < Array.getLength(value); i++) {
+                                Element valueElement = new Element("value");
+                                valueElement.setText(Array.get(value, i).toString());
+                                arrayElement.addContent(valueElement);
+                            }
+                            fieldElement.addContent(arrayElement);
+                        }
+                        else{
+                            System.out.println("array of objects");
+                        }
+                    }
+                    if (!field.getType().isPrimitive()) {
+                        // If the field is an object reference, recursively serialize it
+                        Element valueElement = new Element("reference");
+                        Integer referenceId = objectIds.get(value); // Check if the object has an ID
+                        if (referenceId != null) {
+                            valueElement.setText(String.valueOf(referenceId));
+                            fieldElement.addContent(valueElement);
+                        } else {
+                            // If the referenced object has not been serialized yet, serialize it
+                            serializeObject(value, objectElement);
+                        }
                     } else {
-                        // If the referenced object has not been serialized yet, serialize it
-                        serializeObject(value, objectElement);
+                        // For primitive fields, just store the value as text
+                        Element valueElement = new Element("value");
+                        valueElement.setText(value.toString());
+                        fieldElement.addContent(valueElement);
                     }
                 } else {
-                    // For primitive fields, just store the value as text
-                    Element valueElement = new Element("value");
-                    valueElement.setText(value.toString());
-                    fieldElement.addContent(valueElement);
+                    fieldElement.addContent(new Element("null"));
                 }
-            } else {
-                fieldElement.addContent(new Element("null"));
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
             }
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+    
+            objectElement.addContent(fieldElement);
         }
-
-        objectElement.addContent(fieldElement);
     }
-}
 }
 
 
