@@ -1,8 +1,8 @@
 import java.util.Scanner;
 
 public class ComplexObject {
-    private SubObject1 subObject1;
-    private SubObject2 subObject2;
+    public SubObject1 subObject1;
+    public SubObject2 subObject2;
 
     public ComplexObject() {
         subObject1 = new SubObject1();
@@ -53,13 +53,15 @@ public class ComplexObject {
         ComplexObject complexObject = new ComplexObject();
         complexObject.configure();
         complexObject.displayInfo();
+        Serializer serializer = new Serializer();
+        serializer.serialize(complexObject);
 
     }
 }
 
 class SubObject1 {
-    private int intValue;
-    private ComplexObject circularReference;
+    public int intValue;
+    public ComplexObject circularReference;
 
     public void setIntValue(int intValue) {
         this.intValue = intValue;
@@ -80,8 +82,8 @@ class SubObject1 {
 }
 
 class SubObject2 {
-    private double doubleValue;
-    private ComplexObject circularReference;
+    public double doubleValue;
+    public ComplexObject circularReference;
 
     public void setDoubleValue(double doubleValue) {
         this.doubleValue = doubleValue;
