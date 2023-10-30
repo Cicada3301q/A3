@@ -1,9 +1,9 @@
 import java.util.Scanner;
 
 public class SimpleObject {
-    private int intValue;
-    private double doubleValue;
-    private String stringValue;
+    public int intValue;
+    public double doubleValue;
+  //  public String stringValue;
 
     public SimpleObject() {
         // Default constructor
@@ -17,15 +17,15 @@ public class SimpleObject {
         this.doubleValue = doubleValue;
     }
 
-    public void setStringValue(String stringValue) {
-        this.stringValue = stringValue;
-    }
+    // public void setStringValue(String stringValue) {
+    //     this.stringValue = stringValue;
+    // }
 
     public void displayInfo() {
         System.out.println("SimpleObject Information:");
         System.out.println("Int Value: " + intValue);
         System.out.println("Double Value: " + doubleValue);
-        System.out.println("String Value: " + stringValue);
+      //  System.out.println("String Value: " + stringValue);
     }
 
     public static void main(String[] args) {
@@ -44,14 +44,17 @@ public class SimpleObject {
         simpleObject.setDoubleValue(doubleValue);
 
         scanner.nextLine(); // Consume newline
-        System.out.print("Enter a string value: ");
-        String stringValue = scanner.nextLine();
-        simpleObject.setStringValue(stringValue);
+        // System.out.print("Enter a string value: ");
+        // String stringValue = scanner.nextLine();
+        // simpleObject.setStringValue(stringValue);
 
         // Display the object's information
         simpleObject.displayInfo();
-
+        // Serialize the object
+        Serializer serializer = new Serializer();
+        serializer.serialize(simpleObject);
         // Close the scanner
         scanner.close();
+
     }
 }
