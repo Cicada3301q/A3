@@ -3,6 +3,7 @@ import org.jdom2.Element;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import java.lang.reflect.*;
+
 import java.util.IdentityHashMap;
 
 public class Serializer {
@@ -15,8 +16,11 @@ public class Serializer {
 
         // Serialize the object and add it to the XML document
         serializeObject(obj, root);
+
+        // Output the XML to the console
         XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
         System.out.println(xmlOutputter.outputString(document));
+
         return document;
     }
 
@@ -24,39 +28,52 @@ public class Serializer {
         if (obj == null) {
             return;
         }
-        
 
-        Element objectElement = new Element("object");
-        objectElement.setAttribute("class", obj.getClass().getName());
-        parent.addContent(objectElement);
+        // Check if the object has already been assigned an ID
+        int objectId;
+        if (objectIds.containsKey(obj)) {
+            objectId = objectIds.get(obj);
+        } else {
+            // Assign a new unique ID
+            objectId = currentId;
+            objectIds.put(obj, currentId);
+            currentId++;
 
-        
-        Field[] fields = obj.getClass().getDeclaredFields();
-        for (Field field : fields) {
-            // field.setAccessible(true);
-            Element fieldElement = new Element("field");
-            fieldElement.setAttribute("name", field.getName());
-            fieldElement.setAttribute("declaringClass", field.getDeclaringClass().getName());
+            Element objectElement = new Element("object");
+            objectElement.setAttribute("class", obj.getClass().getName());
+            objectElement.setAttribute("id", String.valueOf(objectId));
+            parent.addContent(objectElement);
 
-            try {
-                // Serialize the field's value
-                Object value = field.get(obj);
-                if (value != null) {
-                    Element valueElement = new Element("value");
-                    valueElement.setText(value.toString());
-                    fieldElement.addContent(valueElement);
+            // Add logic to serialize object properties
+            // For example, if you want to serialize fields, you can use reflection.
+            Field[] fields = obj.getClass().getDeclaredFields();
+            for (Field field : fields) {
+                // field.setAccessible(true);
+                Element fieldElement = new Element("field");
+                fieldElement.setAttribute("name", field.getName());
+                fieldElement.setAttribute("declaringClass", field.getDeclaringClass().getName());
 
-                    // If the field is an object reference, recursively serialize it
-                    if (!field.getType().isPrimitive()) {
-                        serializeObject(value, fieldElement);
+                try {
+                    // Serialize the field's value
+                    Object value = field.get(obj);
+                    if (value != null) {
+                        Element valueElement = new Element("value");
+                        valueElement.setText(value.toString());
+                        fieldElement.addContent(valueElement);
+
+                        // If the field is an object reference, recursively serialize it
+                        if (!field.getType().isPrimitive()) {
+                            serializeObject(value, fieldElement);
+                        }
+                    } else {
+                        fieldElement.addContent(new Element("null"));
                     }
-                } else {
-                    fieldElement.addContent(new Element("null"));
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
                 }
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
+
+                objectElement.addContent(fieldElement);
             }
-            objectElement.addContent(fieldElement);
         }
     }
 }
