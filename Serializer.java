@@ -77,11 +77,30 @@ public class Serializer {
                             }
                             fieldElement.addContent(arrayElement);
                         }
-                        else{
-                            System.out.println("array of objects");
+                        else {
+                            // Array of objects
+                            Element arrayElementObj = new Element("object");
+                            arrayElementObj.setAttribute("class", fieldType.getName());
+                            arrayElementObj.setAttribute("length", String.valueOf(Array.getLength(value)));
+                            for (int i = 0; i < Array.getLength(value); i++) {
+                                Object arrayElement = Array.get(value, i);
+                                if (arrayElement != null) {
+                                    Element arrayElementElement = new Element("reference");
+                                    Integer referenceId = objectIds.get(arrayElement);
+                                    if (referenceId != null) {
+                                        arrayElementElement.setText(String.valueOf(referenceId));
+                                    } else {
+                                        serializeObject(arrayElement, objectElement);
+                                    }
+                                    arrayElementObj.addContent(arrayElementElement);
+                                } else {
+                                    arrayElementObj.addContent(new Element("null"));
+                                }
+                            }
+                           fieldElement.addContent(arrayElementObj);
                         }
                     }
-                    if (!field.getType().isPrimitive()) {
+                    else if (!field.getType().isPrimitive()) {
                         // If the field is an object reference, recursively serialize it
                         Element valueElement = new Element("reference");
                         Integer referenceId = objectIds.get(value); // Check if the object has an ID

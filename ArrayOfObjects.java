@@ -43,12 +43,14 @@ public class ArrayOfObjects {
         for (int i = 0; i < objects.length; i++) {
             System.out.println("Element " + i + ": " + objects[i].getInfo());
         }
+        Serializer serializer = new Serializer();
+        serializer.serialize(arrayOfObjects);
     }
 }
 
 class CustomObject {
     public int intValue;
-    public String stringValue;
+   // public String stringValue;
 
     public void configure() {
         Scanner scanner = new Scanner(System.in);
@@ -58,13 +60,13 @@ class CustomObject {
 
         scanner.nextLine();
 
-        System.out.print("Enter a string value: ");
-        stringValue = scanner.nextLine();
+        // System.out.print("Enter a string value: ");
+        // stringValue = scanner.nextLine();
 
 
     }
 
     public String getInfo() {
-        return "Int Value: " + intValue + ", String Value: " + stringValue;
+        return "Int Value: " + intValue;
     }
 }
