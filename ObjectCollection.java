@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class ObjectCollection {
-    private ArrayList<CustomObject> objectList;
+    public ArrayList<CustomObject> objectList;
 
     public ObjectCollection() {
         objectList = new ArrayList<>();
@@ -36,5 +36,7 @@ public class ObjectCollection {
         for (int i = 0; i < objects.size(); i++) {
             System.out.println("Element " + i + ": " + objects.get(i).getInfo());
         }
+        Serializer serializer = new Serializer();
+        serializer.serialize(collection);
     }
 }

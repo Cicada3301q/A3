@@ -3,6 +3,7 @@ import org.jdom2.Element;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 import java.lang.reflect.*;
+import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -99,7 +100,25 @@ public class Serializer {
                             }
                            fieldElement.addContent(arrayElementObj);
                         }
+                    }else if (Collection.class.isAssignableFrom(fieldType)) {
+                    // Handle collections
+                    Element collectionElement = new Element("object");
+                    collectionElement.setAttribute("class", fieldType.getName());
+                    collectionElement.setAttribute("size", String.valueOf(((Collection<?>) value).size()));
+
+                    for (Object collectionElementValue : (Collection<?>) value) {
+                        Element collectionItemElement = new Element("reference");
+                        Integer referenceId = objectIds.get(collectionElementValue);
+                        if (referenceId != null) {
+                            collectionItemElement.setText(String.valueOf(referenceId));
+                        } else {
+                            serializeObject(collectionElementValue, collectionElement);
+                        }
+                        collectionElement.addContent(collectionItemElement);
                     }
+
+                    fieldElement.addContent(collectionElement);
+                }
                     else if (!field.getType().isPrimitive()) {
                         // If the field is an object reference, recursively serialize it
                         Element valueElement = new Element("reference");
