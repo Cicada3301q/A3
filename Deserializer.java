@@ -17,10 +17,12 @@ public class Deserializer {
     }
 
     private Object deserializeObject(Element element) {
+        System.out.println("entered deserializer");
         String className = element.getAttributeValue("class");
         int objectId = Integer.parseInt(element.getAttributeValue("id"));
 
         if (objectMap.containsKey(objectId)) {
+            System.out.println("already deserialized");
             // Object has already been deserialized, return the cached object
             return objectMap.get(objectId);
         }
@@ -31,6 +33,7 @@ public class Deserializer {
 
         // Deserialize the object's fields
         for (Element fieldElement : element.getChildren("field")) {
+            System.out.println("dissecting fields");
             String fieldName = fieldElement.getAttributeValue("name");
             Class<?> declaringClass = getClass(fieldElement.getAttributeValue("declaringClass"));
             Element fieldValueElement = fieldElement.getChild("value");
@@ -48,22 +51,45 @@ public class Deserializer {
                 }
             }
         }
-
+        System.out.println("obj: " + obj);
         return obj;
     }
 
     private Object createObject(String className) {
-        // Implement object creation logic (e.g., using Class.forName)
-        // Return an instance of the object
-        return null;
+        try {
+            Class<?> objectClass = Class.forName(className);
+            return objectClass.newInstance();
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private void setField(Object obj, String fieldName, Class<?> declaringClass, Object value) {
-        // Implement setting object fields
+        try {
+            java.lang.reflect.Field field = declaringClass.getDeclaredField(fieldName);
+            System.out.println("setfield" + field.getType());
+            field.setAccessible(true);
+            if (field.getType() == int.class) {
+                field.setInt(obj, Integer.parseInt(value.toString()));
+            } else if (field.getType() == double.class) {
+                field.setDouble(obj, Double.parseDouble(value.toString()));
+            } else if (field.getType() == String.class) {
+                field.set(obj, value.toString());
+            } else {
+                // Handle other types or throw an exception if needed
+            }
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     private Class<?> getClass(String className) {
-        // Implement logic to get a Class object by name
-        return null;
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

@@ -25,6 +25,12 @@ public class Serializer {
         XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
         System.out.println(xmlOutputter.outputString(document));
 
+        Deserializer deserializer = new Deserializer();
+        Object deserializedObject = deserializer.deserialize(document);
+
+        Inspector inspector = new Inspector();
+        inspector.inspect(deserializedObject, false);
+
         return document;
     }
 
