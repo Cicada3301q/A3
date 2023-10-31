@@ -52,7 +52,6 @@ public class Serializer {
         references.put(obj, objectElement);
     
         // Add logic to serialize object properties
-        // For example, if you want to serialize fields, you can use reflection.
         Field[] fields = obj.getClass().getDeclaredFields();
         for (Field field : fields) {
             //field.setAccessible(true);
