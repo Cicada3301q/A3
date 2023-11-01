@@ -140,16 +140,7 @@ public class Serializer {
                     serializeCollectionField(fieldElement, value, fieldType);
                 }
                     else if (!field.getType().isPrimitive()) {
-                        // If the field is an object reference, recursively serialize it
-                        Element valueElement = new Element("reference");
-                        Integer referenceId = objectIds.get(value); // Check if the object has an ID
-                        if (referenceId != null) {
-                            valueElement.setText(String.valueOf(referenceId));
-                            fieldElement.addContent(valueElement);
-                        } else {
-                            // If the referenced object has not been serialized yet, serialize it
-                            serializeObject(value, objectElement);
-                        }
+                        serializeReferenceField(fieldElement, value, objectElement);
                     } else {
                         // For primitive fields, just store the value as text
                         Element valueElement = new Element("value");
@@ -186,6 +177,17 @@ public class Serializer {
 
             fieldElement.addContent(collectionElement);
     }
+       private void serializeReferenceField(Element fieldElement, Object value, Element objectElement){
+                // If the field is an object reference, recursively serialize it
+            Element valueElement = new Element("reference");
+            Integer referenceId = objectIds.get(value); // Check if the object has an ID
+            if (referenceId != null) {
+                valueElement.setText(String.valueOf(referenceId));
+                fieldElement.addContent(valueElement);
+            } else {
+                // If the referenced object has not been serialized yet, serialize it
+                serializeObject(value, objectElement);
+            }}
 }
 
 
