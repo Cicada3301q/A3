@@ -17,27 +17,24 @@ public class Deserializer {
     }
 
     private Object deserializeObject(Element element) {
-        System.out.println("entered deserializer");
         String className = element.getAttributeValue("class");
         int objectId = Integer.parseInt(element.getAttributeValue("id"));
-
+    
         if (objectMap.containsKey(objectId)) {
-            System.out.println("already deserialized");
             // Object has already been deserialized, return the cached object
             return objectMap.get(objectId);
         }
-
+    
         // Create an instance of the object
         Object obj = createObject(className);
         objectMap.put(objectId, obj);
-
+    
         // Deserialize the object's fields
         for (Element fieldElement : element.getChildren("field")) {
-            System.out.println("dissecting fields");
             String fieldName = fieldElement.getAttributeValue("name");
             Class<?> declaringClass = getClass(fieldElement.getAttributeValue("declaringClass"));
             Element fieldValueElement = fieldElement.getChild("value");
-
+    
             if (fieldValueElement != null) {
                 // Deserialize primitive field
                 setField(obj, fieldName, declaringClass, fieldValueElement.getText());
@@ -51,7 +48,13 @@ public class Deserializer {
                 }
             }
         }
-        System.out.println("obj: " + obj);
+    
+        // Process objects referenced within this object
+        for (Element nestedObjectElement : element.getChildren("object")) {
+            System.out.println("Element is" + nestedObjectElement);
+            deserializeObject(nestedObjectElement);
+        }
+    
         return obj;
     }
 

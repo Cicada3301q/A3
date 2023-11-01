@@ -6,10 +6,19 @@ import java.lang.reflect.*;
 import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.io.ByteArrayOutputStream;
 
 public class Serializer {
     private IdentityHashMap<Object, Integer> objectIds = new IdentityHashMap<>();
     private int currentId = 0;
+
+    String serverAddress = "localhost"; // Change this to the server's IP address
+    int serverPort = 1234; // Change this to the server's port
     
     // Used to store references
     private Map<Object, Element> references = new IdentityHashMap<>();
@@ -20,17 +29,39 @@ public class Serializer {
 
         // Serialize the object and add it to the XML document
         serializeObject(obj, root);
-
+        try {
         // Output the XML to the console
         XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
         System.out.println(xmlOutputter.outputString(document));
 
-        Deserializer deserializer = new Deserializer();
-        Object deserializedObject = deserializer.deserialize(document);
+        // Create a socket to connect to the server
+        Socket socket = new Socket(serverAddress, serverPort);
 
-        Inspector inspector = new Inspector();
-        inspector.inspect(deserializedObject, false);
+        // Get the output stream of the socket
+        OutputStream outputStream = socket.getOutputStream();
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
 
+
+        // Convert the JDOM Document to bytes
+       // XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+            xmlOutputter.output(document, byteArrayOutputStream);
+        byte[] documentBytes = byteArrayOutputStream.toByteArray();
+
+        // Send the JDOM Document bytes to the server
+        bufferedOutputStream.write(documentBytes);
+        
+        
+        // Close the streams and socket
+        bufferedOutputStream.flush();
+        socket.close();
+
+        System.out.println("XML file sent successfully.");
+
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
         return document;
     }
 
