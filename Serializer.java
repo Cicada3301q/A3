@@ -43,10 +43,9 @@ public class Serializer {
 
 
         // Convert the JDOM Document to bytes
-       // XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-            xmlOutputter.output(document, byteArrayOutputStream);
+        xmlOutputter.output(document, byteArrayOutputStream);
         byte[] documentBytes = byteArrayOutputStream.toByteArray();
 
         // Send the JDOM Document bytes to the server
@@ -65,65 +64,97 @@ public class Serializer {
         return document;
     }
 
-    private void serializeObject(Object obj, Element parent) {
+     private void serializeObject(Object obj, Element parent) {
         if (obj == null) {
             return;
         }
     
-        Element objectElement = createObjectElement(obj);
-        parent.addContent(objectElement);
+        Element objectElement = new Element("object");
+        objectElement.setAttribute("class", obj.getClass().getName());
     
-        Integer objectId = getObjectIdentifier(obj);
+        // Check if the object has already been assigned an ID
+        Integer objectId = objectIds.get(obj);
         if (objectId == null) {
-            objectId = assignNewIdentifier(obj);
+            // Assign a new unique ID
+            objectId = currentId;
+            objectIds.put(obj, objectId);
+            currentId++;
         }
     
         objectElement.setAttribute("id", String.valueOf(objectId));
-        storeObjectReference(obj, objectElement);
-        serializeObjectProperties(obj, objectElement);
-    }
+        parent.addContent(objectElement);
     
-    private Element createObjectElement(Object obj) {
-        Element objectElement = new Element("object");
-        objectElement.setAttribute("class", obj.getClass().getName());
-        return objectElement;
-    }
-    
-    private Integer getObjectIdentifier(Object obj) {
-        return objectIds.get(obj);
-    }
-    
-    private Integer assignNewIdentifier(Object obj) {
-        Integer objectId = currentId;
-        objectIds.put(obj, objectId);
-        currentId++;
-        return objectId;
-    }
-    
-    private void storeObjectReference(Object obj, Element objectElement) {
+        // Store a reference to this object for possible later use
         references.put(obj, objectElement);
-    }
     
-    private void serializeObjectProperties(Object obj, Element objectElement) {
+        // Add logic to serialize object properties
         Field[] fields = obj.getClass().getDeclaredFields();
         for (Field field : fields) {
-            field.setAccessible(true);
+            //field.setAccessible(true);
             Class<?> fieldType = field.getType();
             Element fieldElement = new Element("field");
             fieldElement.setAttribute("name", field.getName());
             fieldElement.setAttribute("declaringClass", field.getDeclaringClass().getName());
     
             try {
+                // Serialize the field's value
                 Object value = field.get(obj);
                 if (value != null) {
-                    if (fieldType.isArray()) {
-                        serializeArrayField(fieldElement, value, fieldType);
-                    } else if (Collection.class.isAssignableFrom(fieldType)) {
-                        serializeCollectionField(fieldElement, value);
-                    } else if (!fieldType.isPrimitive()) {
-                        serializeReferenceField(fieldElement, value);
+                    if(fieldType.isArray()){
+                        if (fieldType.getComponentType().isPrimitive()) {
+                            // Array of primitives
+                            Element arrayElement = new Element("object");
+                            arrayElement.setAttribute("class", fieldType.getName());
+                            arrayElement.setAttribute("length", String.valueOf(Array.getLength(value)));
+                            for (int i = 0; i < Array.getLength(value); i++) {
+                                Element valueElement = new Element("value");
+                                valueElement.setText(Array.get(value, i).toString());
+                                arrayElement.addContent(valueElement);
+                            }
+                            fieldElement.addContent(arrayElement);
+                        }
+                        else {
+                            // Array of objects
+                            Element arrayElementObj = new Element("object");
+                            arrayElementObj.setAttribute("class", fieldType.getName());
+                            arrayElementObj.setAttribute("length", String.valueOf(Array.getLength(value)));
+                            for (int i = 0; i < Array.getLength(value); i++) {
+                                Object arrayElement = Array.get(value, i);
+                                if (arrayElement != null) {
+                                    Element arrayElementElement = new Element("reference");
+                                    Integer referenceId = objectIds.get(arrayElement);
+                                    if (referenceId != null) {
+                                        arrayElementElement.setText(String.valueOf(referenceId));
+                                    } else {
+                                        serializeObject(arrayElement, objectElement);
+                                    }
+                                    arrayElementObj.addContent(arrayElementElement);
+                                } else {
+                                    arrayElementObj.addContent(new Element("null"));
+                                }
+                            }
+                           fieldElement.addContent(arrayElementObj);
+                        }
+                    }else if (Collection.class.isAssignableFrom(fieldType)) {
+                    // Handle collections
+                    serializeCollectionField(fieldElement, value, fieldType);
+                }
+                    else if (!field.getType().isPrimitive()) {
+                        // If the field is an object reference, recursively serialize it
+                        Element valueElement = new Element("reference");
+                        Integer referenceId = objectIds.get(value); // Check if the object has an ID
+                        if (referenceId != null) {
+                            valueElement.setText(String.valueOf(referenceId));
+                            fieldElement.addContent(valueElement);
+                        } else {
+                            // If the referenced object has not been serialized yet, serialize it
+                            serializeObject(value, objectElement);
+                        }
                     } else {
-                        serializePrimitiveField(fieldElement, value);
+                        // For primitive fields, just store the value as text
+                        Element valueElement = new Element("value");
+                        valueElement.setText(value.toString());
+                        fieldElement.addContent(valueElement);
                     }
                 } else {
                     fieldElement.addContent(new Element("null"));
@@ -135,84 +166,25 @@ public class Serializer {
             objectElement.addContent(fieldElement);
         }
     }
-    
-    private void serializeArrayField(Element fieldElement, Object value, Class<?> fieldType) {
-        if (fieldType.getComponentType().isPrimitive()) {
-            // Array of primitives
-            Element arrayElement = new Element("object");
-            arrayElement.setAttribute("class", fieldType.getName());
-            arrayElement.setAttribute("length", String.valueOf(Array.getLength(value)));
-    
-            for (int i = 0; i < Array.getLength(value); i++) {
-                Element valueElement = new Element("value");
-                valueElement.setText(Array.get(value, i).toString());
-                arrayElement.addContent(valueElement);
-            }
-    
-            fieldElement.addContent(arrayElement);
-        } else {
-            // Array of objects
-            Element arrayElementObj = new Element("object");
-            arrayElementObj.setAttribute("class", fieldType.getName());
-            arrayElementObj.setAttribute("length", String.valueOf(Array.getLength(value)));
-    
-            for (int i = 0; i < Array.getLength(value); i++) {
-                Object arrayElement = Array.get(value, i);
-                if (arrayElement != null) {
-                    Element arrayElementElement = new Element("reference");
-                    Integer referenceId = objectIds.get(arrayElement);
-                    if (referenceId != null) {
-                        arrayElementElement.setText(String.valueOf(referenceId));
-                    } else {
-                        serializeObject(arrayElement, arrayElementObj); // Pass arrayElementObj as the parent
-                    }
-                    arrayElementObj.addContent(arrayElementElement);
+    private void serializeCollectionField(Element fieldElement, Object value, Class<?> fieldType){
+            // Handle collections
+
+            Element collectionElement = new Element("object");
+            collectionElement.setAttribute("class", fieldType.getName());
+            collectionElement.setAttribute("size", String.valueOf(((Collection<?>) value).size()));
+
+            for (Object collectionElementValue : (Collection<?>) value) {
+                Element collectionItemElement = new Element("reference");
+                Integer referenceId = objectIds.get(collectionElementValue);
+                if (referenceId != null) {
+                    collectionItemElement.setText(String.valueOf(referenceId));
                 } else {
-                    arrayElementObj.addContent(new Element("null"));
+                    serializeObject(collectionElementValue, collectionElement);
                 }
+                collectionElement.addContent(collectionItemElement);
             }
-            fieldElement.addContent(arrayElementObj);
-        }
-    }
-    
-    private void serializeCollectionField(Element fieldElement, Object value) {
-        // Handle collections
-        Collection<?> collectionValue = (Collection<?>) value;
-        Element collectionElement = new Element("object");
-        collectionElement.setAttribute("class", value.getClass().getName());
-        collectionElement.setAttribute("size", String.valueOf(collectionValue.size()));
-    
-        for (Object collectionElementValue : collectionValue) {
-            Element collectionItemElement = new Element("reference");
-            Integer referenceId = objectIds.get(collectionElementValue);
-            if (referenceId != null) {
-                collectionItemElement.setText(String.valueOf(referenceId));
-            } else {
-                serializeObject(collectionElementValue, collectionElement); // Pass collectionElement as the parent
-            }
-            collectionElement.addContent(collectionItemElement);
-        }
-    
-        fieldElement.addContent(collectionElement);
-    }
-    
-    private void serializeReferenceField(Element fieldElement, Object value) {
-        // Serialize reference fields
-        Element valueElement = new Element("reference");
-        Integer referenceId = objectIds.get(value);
-        if (referenceId != null) {
-            valueElement.setText(String.valueOf(referenceId));
-        } else {
-            serializeObject(value, fieldElement); // Pass fieldElement as the parent
-        }
-        fieldElement.addContent(valueElement);
-    }
-    
-    private void serializePrimitiveField(Element fieldElement, Object value) {
-        // Serialize primitive fields
-        Element valueElement = new Element("value");
-        valueElement.setText(value.toString());
-        fieldElement.addContent(valueElement);
+
+            fieldElement.addContent(collectionElement);
     }
 }
 
