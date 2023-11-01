@@ -34,28 +34,28 @@ public class Serializer {
         XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
         System.out.println(xmlOutputter.outputString(document));
 
-    //     // Create a socket to connect to the server
-    //     Socket socket = new Socket(serverAddress, serverPort);
+        // Create a socket to connect to the server
+        Socket socket = new Socket(serverAddress, serverPort);
 
-    //     // Get the output stream of the socket
-    //     OutputStream outputStream = socket.getOutputStream();
-    //     BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
+        // Get the output stream of the socket
+        OutputStream outputStream = socket.getOutputStream();
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(outputStream);
 
 
-    //     // Convert the JDOM Document to bytes
-    //    // XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
-    //     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        // Convert the JDOM Document to bytes
+       // XMLOutputter xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-    //         xmlOutputter.output(document, byteArrayOutputStream);
-    //     byte[] documentBytes = byteArrayOutputStream.toByteArray();
+            xmlOutputter.output(document, byteArrayOutputStream);
+        byte[] documentBytes = byteArrayOutputStream.toByteArray();
 
-    //     // Send the JDOM Document bytes to the server
-    //     bufferedOutputStream.write(documentBytes);
+        // Send the JDOM Document bytes to the server
+        bufferedOutputStream.write(documentBytes);
         
         
-    //     // Close the streams and socket
-    //     bufferedOutputStream.flush();
-        // socket.close();
+        // Close the streams and socket
+        bufferedOutputStream.flush();
+        socket.close();
 
         System.out.println("XML file sent successfully.");
 
