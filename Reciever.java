@@ -7,7 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
-
+//Code taken from Kimiya's tutorial on socket connections
 
 public class Reciever {
 
