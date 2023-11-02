@@ -115,25 +115,7 @@ public class Serializer {
                         }
                         else {
                             // Array of objects
-                            Element arrayElementObj = new Element("object");
-                            arrayElementObj.setAttribute("class", fieldType.getName());
-                            arrayElementObj.setAttribute("length", String.valueOf(Array.getLength(value)));
-                            for (int i = 0; i < Array.getLength(value); i++) {
-                                Object arrayElement = Array.get(value, i);
-                                if (arrayElement != null) {
-                                    Element arrayElementElement = new Element("reference");
-                                    Integer referenceId = objectIds.get(arrayElement);
-                                    if (referenceId != null) {
-                                        arrayElementElement.setText(String.valueOf(referenceId));
-                                    } else {
-                                        serializeObject(arrayElement, objectElement);
-                                    }
-                                    arrayElementObj.addContent(arrayElementElement);
-                                } else {
-                                    arrayElementObj.addContent(new Element("null"));
-                                }
-                            }
-                           fieldElement.addContent(arrayElementObj);
+                            serializeArrayOfObjects(fieldElement, value, objectElement, fieldType);
                         }
                     }else if (Collection.class.isAssignableFrom(fieldType)) {
                     // Handle collections
@@ -157,25 +139,34 @@ public class Serializer {
             objectElement.addContent(fieldElement);
         }
     }
-    private void serializeCollectionField(Element fieldElement, Object value, Class<?> fieldType){
-            // Handle collections
-
-            Element collectionElement = new Element("object");
-            collectionElement.setAttribute("class", fieldType.getName());
-            collectionElement.setAttribute("size", String.valueOf(((Collection<?>) value).size()));
-
-            for (Object collectionElementValue : (Collection<?>) value) {
+    private void serializeCollectionField(Element fieldElement, Object value, Class<?> fieldType) {
+        // Handle collections
+        Collection<?> collectionValue = (Collection<?>) value;
+    
+        Element collectionElement = new Element("object");
+        collectionElement.setAttribute("class", fieldType.getName());
+        collectionElement.setAttribute("size", String.valueOf(collectionValue.size()));
+    
+        for (Object collectionElementValue : collectionValue) {
+            Integer referenceId = objectIds.get(collectionElementValue);
+            if (referenceId != null) {
+                // Use the existing identifier for the reference field
                 Element collectionItemElement = new Element("reference");
-                Integer referenceId = objectIds.get(collectionElementValue);
-                if (referenceId != null) {
-                    collectionItemElement.setText(String.valueOf(referenceId));
-                } else {
-                    serializeObject(collectionElementValue, collectionElement);
-                }
-                collectionElement.addContent(collectionItemElement);
+                collectionItemElement.setText(String.valueOf(referenceId));
+                fieldElement.addContent(collectionItemElement);
+            } else {
+                // If not already registered, register the object and serialize it
+                referenceId = currentId;
+                objectIds.put(collectionElementValue, referenceId);
+                currentId++;
+                Element collectionItemElement = new Element("reference");
+                collectionItemElement.setText(String.valueOf(referenceId));
+                fieldElement.addContent(collectionItemElement);
+                serializeObject(collectionElementValue, collectionElement);
             }
-
-            fieldElement.addContent(collectionElement);
+        }
+    
+        fieldElement.addContent(collectionElement);
     }
        private void serializeReferenceField(Element fieldElement, Object value, Element objectElement){
                 // If the field is an object reference, recursively serialize it
@@ -188,6 +179,39 @@ public class Serializer {
                 // If the referenced object has not been serialized yet, serialize it
                 serializeObject(value, objectElement);
             }}
+
+            private void serializeArrayOfObjects(Element fieldElement, Object value, Element objectElement, Class<?> fieldType) {
+                // Array of objects
+                Element arrayElementObj = new Element("object");
+                arrayElementObj.setAttribute("class", fieldType.getName());
+                arrayElementObj.setAttribute("length", String.valueOf(Array.getLength(value)));
+            
+                for (int i = 0; i < Array.getLength(value); i++) {
+                    Object arrayElement = Array.get(value, i);
+                    if (arrayElement != null) {
+                        Integer referenceId = objectIds.get(arrayElement);
+                        if (referenceId != null) {
+                            // Use the existing identifier for the reference field
+                            Element arrayElementElement = new Element("reference");
+                            arrayElementElement.setText(String.valueOf(referenceId));
+                            fieldElement.addContent(arrayElementElement);
+                        } else {
+                            // If not already registered, register the object and serialize it
+                            referenceId = currentId;
+                            objectIds.put(arrayElement, referenceId);
+                            currentId++;
+                            Element arrayElementElement = new Element("reference");
+                            arrayElementElement.setText(String.valueOf(referenceId));
+                            fieldElement.addContent(arrayElementElement);
+                            serializeObject(arrayElement, objectElement);
+                        }
+                    } else {
+                        arrayElementObj.addContent(new Element("null"));
+                    }
+                }
+            
+                fieldElement.addContent(arrayElementObj);
+            }
 }
 
 
