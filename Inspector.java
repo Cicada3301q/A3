@@ -35,14 +35,14 @@ public class Inspector {
         System.out.println("---- Printing Class Information ----");
         inspectClassInformation(ObjClass);
 
-        System.out.println("---- Printing Method Information ----");
-        inspectMethods(ObjClass);
+        // System.out.println("---- Printing Method Information ----");
+        // inspectMethods(ObjClass);
 
         System.out.println("---- Printing Field Information ----");
         inspectFields(obj, ObjClass, objectsToInspect, fieldClasses);
 
-        System.out.println("---- Printing Constructor Information ----");
-        inspectConstructors(ObjClass, fieldClasses);
+        // System.out.println("---- Printing Constructor Information ----");
+        // inspectConstructors(ObjClass, fieldClasses);
 
         // System.out.println("---- Printing Inspect Superclass Information ----");
         // inspectSuperclasses(ObjClass, objectsToInspect, recursive);
