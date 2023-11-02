@@ -65,6 +65,9 @@ class CustomObject {
 
 
     }
+    public void setIntValue(int value){
+        this.intValue = value;
+    }
 
     public String getInfo() {
         return "Int Value: " + intValue;
