@@ -103,15 +103,7 @@ public class Serializer {
                     if(fieldType.isArray()){
                         if (fieldType.getComponentType().isPrimitive()) {
                             // Array of primitives
-                            Element arrayElement = new Element("object");
-                            arrayElement.setAttribute("class", fieldType.getName());
-                            arrayElement.setAttribute("length", String.valueOf(Array.getLength(value)));
-                            for (int i = 0; i < Array.getLength(value); i++) {
-                                Element valueElement = new Element("value");
-                                valueElement.setText(Array.get(value, i).toString());
-                                arrayElement.addContent(valueElement);
-                            }
-                            fieldElement.addContent(arrayElement);
+                            serializeArrayOfPrimitives(fieldElement, value, objectElement, fieldType);
                         }
                         else {
                             // Array of objects
@@ -120,7 +112,7 @@ public class Serializer {
                     }else if (Collection.class.isAssignableFrom(fieldType)) {
                     // Handle collections
                     serializeCollectionField(fieldElement, value, fieldType);
-                }
+                    }
                     else if (!field.getType().isPrimitive()) {
                         serializeReferenceField(fieldElement, value, objectElement);
                     } else {
@@ -211,6 +203,18 @@ public class Serializer {
                 }
             
                 fieldElement.addContent(arrayElementObj);
+            }
+            private void serializeArrayOfPrimitives(Element fieldElement, Object value, Element objectElement, Class<?> fieldType){
+                // Array of primitives
+                Element arrayElement = new Element("object");
+                arrayElement.setAttribute("class", fieldType.getName());
+                arrayElement.setAttribute("length", String.valueOf(Array.getLength(value)));
+                for (int i = 0; i < Array.getLength(value); i++) {
+                    Element valueElement = new Element("value");
+                    valueElement.setText(Array.get(value, i).toString());
+                    arrayElement.addContent(valueElement);
+                }
+                fieldElement.addContent(arrayElement);
             }
 }
 
